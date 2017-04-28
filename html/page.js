@@ -69,7 +69,7 @@ document.writeln("     <br> ");
 document.writeln("     <div class=\"container\"> "); 
 document.writeln("         <div class=\"col-lg-4\"></div> "); 
 document.writeln("         <div class=\"col-lg-4 text-center\"> "); 
-document.writeln("             <a href=\"#\" class=\"btn btn-info\">Dispense food!</a> "); 
+document.writeln("             <a href=\"feed\" class=\"btn btn-info\">Dispense food!</a> "); 
 document.writeln("         </div> "); 
 document.writeln("         <div class=\"col-lg-4\"></div> "); 
 document.writeln("     </div> "); 
