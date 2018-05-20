@@ -8,6 +8,21 @@
 #include <Servo.h>
 Servo servo1;
 #define servo1Pin D7
+#include <NTPClient.h>
+#include <Time.h>
+#include <TimeAlarms.h>
+
+WiFiUDP ntpUDP;
+
+// By default 'time.nist.gov' is used with 60 seconds update interval and
+// no offset
+NTPClient timeClient(ntpUDP);
+
+// You can specify the time server pool and the offset, (in seconds)
+// additionaly you can specify the update interval (in milliseconds).
+// NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000);
+
+
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 uint8_t heart[8] = {0x0, 0xa, 0x1f, 0x1f, 0xe, 0x4, 0x0};
@@ -42,7 +57,7 @@ void setup() {
   //Use predefined PINS consts
   
   
-  
+  timeClient.begin();
   
   server.begin();
 
@@ -87,16 +102,16 @@ void feed(bool i) {
   servo1.attach(servo1Pin);
   servo1.write(0);
 
-  delay(5000); // feed time
+  Alarm.delay(5000); // feed time
 
   servo1.detach();
 
-  delay(1000);
+  Alarm.delay(1000);
 
   lcd.noBacklight();
 
   lcd.clear();
-  lcd.print("Connect to");
+  lcd.print(timeClient.getFormattedTime());
 
   lcd.setCursor(0,1);
   lcd.print(WiFi.localIP());
@@ -106,14 +121,26 @@ void loop(void){
   
   server.handleClient();
 
+  lcd.clear();
+  lcd.print(timeClient.getFormattedTime());
+
+  lcd.setCursor(0,1);
+  lcd.print(WiFi.localIP());
+
   while (digitalRead(D6) == 0) {
     feed(false);
   }
 
   while (digitalRead(D5) == 0) {
     lcd.backlight();
-    delay(5000);
+    Alarm.delay(5000);
     lcd.noBacklight();
   }
+
+  timeClient.update();
+
+  Serial.println(timeClient.getFormattedTime());
+
+  Alarm.delay(1000);
 
 }
