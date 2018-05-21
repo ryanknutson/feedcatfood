@@ -32,7 +32,8 @@ ESP8266WebServer server(80);
 
 
 void setup() {
-  //pinMode(2, OUTPUT); led onboard
+  pinMode(LED_BUILTIN, OUTPUT); //led onboard
+  digitalWrite(LED_BUILTIN, LOW);
   pinMode(D6, INPUT_PULLUP);
 
   pinMode(D5, INPUT_PULLUP);
@@ -77,6 +78,8 @@ void setup() {
   delay(10000);
   lcd.noBacklight();
 
+  digitalWrite(LED_BUILTIN, HIGH);
+
   server.on("/", [](){
     server.send(200, "text/html", webPage);
   });
@@ -100,12 +103,20 @@ void feed(bool i) {
     server.send(200, "text/html", "<script>document.location.href=\"/success\";</script>");
   }
   
+  
+  //servo1.write(0);
+  //digitalWrite(LED_BUILTIN, LOW);
+
   servo1.attach(servo1Pin);
+  digitalWrite(LED_BUILTIN, LOW);
   servo1.write(0);
+      
+      
 
   delay(5000); // feed time
 
   servo1.detach();
+  digitalWrite(LED_BUILTIN, HIGH);
 
   delay(1000);
 
