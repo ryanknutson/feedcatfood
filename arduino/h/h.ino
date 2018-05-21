@@ -10,8 +10,7 @@ Servo servo1;
 #define servo1Pin D7
 #include <NTPClient.h>
 #include <Time.h>
-//#include <TimeAlarms.h>
-
+#include <TimeAlarms.h>
 
 WiFiUDP ntpUDP;
 
@@ -25,10 +24,43 @@ NTPClient timeClient(ntpUDP);
 
 
 
+
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 uint8_t heart[8] = {0x0, 0xa, 0x1f, 0x1f, 0xe, 0x4, 0x0};
 String webPage = "<script src=\"//rawgit.com/ryanknutson/feedcatfood/master/html/page.js\"></script>";
 ESP8266WebServer server(80);
+
+void feed() {
+  timeClient.update();
+  
+  lcd.clear();
+  lcd.backlight();
+  lcd.print("Feeding...");
+  
+  
+  server.send(200, "text/html", "<script>document.location.href=\"/success\";</script>");
+  
+  
+  servo1.attach(servo1Pin);
+  servo1.write(0);
+
+  Alarm.delay(5000); // feed time
+
+  setTime(timeClient.getHours(),timeClient.getMinutes(),timeClient.getSeconds(),1,1,18);
+
+  servo1.detach();
+
+  Alarm.delay(1000);
+
+  lcd.noBacklight();
+
+  lcd.clear();
+  //lcd.print(timeClient.getFormattedTime());
+
+  lcd.setCursor(0,1);
+  lcd.print(WiFi.localIP());
+  return;
+}
 
 
 void setup() {
@@ -59,6 +91,10 @@ void setup() {
   
   
   timeClient.begin();
+
+  timeClient.update();
+  Alarm.delay(5000);
+  setTime(timeClient.getHours(),timeClient.getMinutes(),timeClient.getSeconds(),1,1,18);
   
   server.begin();
 
@@ -77,6 +113,8 @@ void setup() {
   delay(10000);
   lcd.noBacklight();
 
+  
+
   server.on("/", [](){
     server.send(200, "text/html", webPage);
   });
@@ -86,39 +124,16 @@ void setup() {
   });
 
   server.on("/feed", HTTP_GET,[](){
-    feed(true);
+    feed();
   });
   
 }
 
-void feed(bool i) {
-  lcd.clear();
-  lcd.backlight();
-  lcd.print("Feeding...");
-  
-  if (i == true) {
-    server.send(200, "text/html", "<script>document.location.href=\"/success\";</script>");
-  }
-  
-  servo1.attach(servo1Pin);
-  servo1.write(0);
 
-  delay(5000); // feed time
-
-  servo1.detach();
-
-  delay(1000);
-
-  lcd.noBacklight();
-
-  lcd.clear();
-  lcd.print(timeClient.getFormattedTime());
-
-  lcd.setCursor(0,1);
-  lcd.print(WiFi.localIP());
-}
 
 void loop(void){
+
+  
   
   server.handleClient();
 
@@ -129,30 +144,18 @@ void loop(void){
   lcd.print(WiFi.localIP());
 
   while (digitalRead(D6) == 0) {
-    feed(false);
+    feed();
   }
 
   while (digitalRead(D5) == 0) {
     lcd.backlight();
-    delay(5000);
+    Alarm.delay(5000);
     lcd.noBacklight();
   }
 
-  timeClient.update();
-
-  Serial.println(timeClient.getFormattedTime());
-  Serial.println(millis());
-  delay(1000);
-
-}
-
-
-void mdelay(unsigned long ms) {               // ms: duration
-    unsigned long start = millis();           // start: timestamp
-    for (;;) {
-        unsigned long now = millis();         // now: timestamp
-        unsigned long elapsed = now - start;  // elapsed: duration
-        if (elapsed >= ms)                    // comparing durations: OK
-            return;
-    }
+  Serial.println((String)hour() + ":" + (String)minute() + ":" + (String)second());
+  
+  Alarm.delay(1000);
+  
+  Alarm.alarmOnce(20,59,00, feed);
 }
