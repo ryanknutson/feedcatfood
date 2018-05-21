@@ -123,36 +123,37 @@ void loop(void){
   server.handleClient();
 
   lcd.clear();
-  lcd.print(timeClient.getFormattedTime());
-
-  lcd.setCursor(0,1);
-  lcd.print(WiFi.localIP());
+  printInfo();
 
   while (digitalRead(D6) == 0) {
     feed(false);
   }
 
   while (digitalRead(D5) == 0) {
-    lcd.backlight();
-    delay(5000);
+    lcd.setCursor(0,1);
+    lcd.print(WiFi.localIP());
+    
+    unsigned long start = millis();
+    while (millis() - start < 5000) {
+      yield();
+      Serial.println(millis());
+      lcd.backlight();
+      //lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print(timeClient.getFormattedTime());
+    }
+    
     lcd.noBacklight();
   }
-
+  
   timeClient.update();
 
-  Serial.println(timeClient.getFormattedTime());
-  Serial.println(millis());
-  delay(1000);
-
 }
 
+void printInfo(void) {
+  lcd.print(timeClient.getFormattedTime());
 
-void mdelay(unsigned long ms) {               // ms: duration
-    unsigned long start = millis();           // start: timestamp
-    for (;;) {
-        unsigned long now = millis();         // now: timestamp
-        unsigned long elapsed = now - start;  // elapsed: duration
-        if (elapsed >= ms)                    // comparing durations: OK
-            return;
-    }
+  lcd.setCursor(0,1);
+  lcd.print(WiFi.localIP());
 }
+
